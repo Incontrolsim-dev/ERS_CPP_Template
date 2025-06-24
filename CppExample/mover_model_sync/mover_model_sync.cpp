@@ -1,11 +1,11 @@
-#include "Ers/Api.h"
-
+#include "Ers/Logger.h"
 #include "Ers/Model/ModelContainer.h"
 #include "Ers/Model/ModelManager.h"
 #include "Ers/Model/Simulator/Simulator.h"
+#include "Ers/SubModel/DataComponent.h"
 #include "Ers/SubModel/EventScheduler.h"
+#include "Ers/SubModel/ScriptBehaviorComponent.h"
 #include "Ers/SubModel/SubModel.h"
-#include "Ers/Logger.h"
 
 #include <format>
 #include <queue>
@@ -98,10 +98,10 @@ namespace MoverModelSync
 
 int main()
 {
-    Ers::InitializeAPI();
+    Ers::Initialize();
 
     const uint64_t nObjects = 10000;
-    auto endTimeForModel    = SimulationTime(10000);
+    auto endTimeForModel = SimulationTime(10000);
     endTimeForModel *= 1'000'000; // Apply model precision
 
     Ers::Model::ModelManager& manager = Ers::Model::GetModelManager();
@@ -109,37 +109,41 @@ int main()
 
     // Create simulators and get the submodels
     auto sourceSimulator = modelContainer.AddSimulator("Source Simulator", Ers::SimulatorType::DiscreteEvent);
-    auto& sourceSubModel = sourceSimulator.GetSubModel();
     auto targetSimulator = modelContainer.AddSimulator("Target Simulator", Ers::SimulatorType::DiscreteEvent);
-    auto& targetSubModel = targetSimulator.GetSubModel();
+
+    auto& submodel = Ers::GetSubModel();
 
     // Register types
-    sourceSubModel.AddComponentType<MoverModelSync::BinComponent>();
-    sourceSubModel.AddComponentType<MoverModelSync::MoveBehaviour>();
-    targetSubModel.AddComponentType<MoverModelSync::BinComponent>();
-    targetSubModel.AddComponentType<MoverModelSync::MoveBehaviour>();
+    sourceSimulator.EnterSubModel();
+    Ers::GetSubModel().AddComponentType<MoverModelSync::BinComponent>();
+    Ers::GetSubModel().AddComponentType<MoverModelSync::MoveBehaviour>();
+    targetSimulator.EnterSubModel();
+    Ers::GetSubModel().AddComponentType<MoverModelSync::BinComponent>();
+    targetSimulator.ExitSubModel();
 
     // Create source bin and fill it with objects
-    const EntityID sourceEntity = sourceSubModel.CreateEntity("Source bin");
-    auto source                 = sourceSubModel.AddComponent<MoverModelSync::BinComponent>(sourceEntity);
+    const EntityID sourceEntity = Ers::GetSubModel().CreateEntity("Source bin");
+    auto source = Ers::GetSubModel().AddComponent<MoverModelSync::BinComponent>(sourceEntity);
     source->Stored = nObjects;
 
     // Create target bin and leave it empty
-    const EntityID targetEntity = targetSubModel.CreateEntity("Target bin");
-    auto target                 = targetSubModel.AddComponent<MoverModelSync::BinComponent>(targetEntity);
-    target->Stored = 0;
+    targetSimulator.EnterSubModel();
+    const EntityID targetEntity = Ers::GetSubModel().CreateEntity("Target bin");
+    auto target = Ers::GetSubModel().AddComponent<MoverModelSync::BinComponent>(targetEntity);
+    targetSimulator.ExitSubModel();
 
     // Create mover and set source and target to move from and to
-    const EntityID moverEntity = sourceSubModel.CreateEntity("Mover");
-    auto mover                 = sourceSubModel.AddComponent<MoverModelSync::MoveBehaviour>(moverEntity);
-    mover->Source              = sourceEntity;
-    mover->Target              = targetEntity;
+    const EntityID moverEntity = Ers::GetSubModel().CreateEntity("Mover");
+    auto mover = Ers::GetSubModel().AddComponent<MoverModelSync::MoveBehaviour>(moverEntity);
+    mover->Source = sourceEntity;
+    mover->Target = targetEntity;
 
-    // Add source simulator as dependency to taget simulator, required for sync event
+    sourceSimulator.ExitSubModel();
+
+    // Add source simulator as dependency to target simulator, required for sync event
     modelContainer.AddSimulatorDependency(sourceSimulator, targetSimulator);
 
-    Ers::Logger::Info(
-        std::format("Source bin has {} objects, Target bin has {} objects", source->Stored, target->Stored));
+    Ers::Logger::Info(std::format("Source bin has {} objects, Target bin has {} objects", source->Stored, target->Stored));
 
     Ers::Logger::Debug("Starting...");
     manager.AddModelContainer(modelContainer, endTimeForModel);
@@ -149,9 +153,15 @@ int main()
         manager.Update();
     }
 
-    auto sourceResult = sourceSubModel.GetComponent<MoverModelSync::BinComponent>(sourceEntity);
-    auto targetResult = targetSubModel.GetComponent<MoverModelSync::BinComponent>(targetEntity);
-    Ers::Logger::Info(
-        std::format("Source bin has {} objects, Target bin has {} objects", sourceResult->Stored, targetResult->Stored));
-	return 0;
+    sourceSimulator.EnterSubModel();
+    source = Ers::GetSubModel().GetComponent<MoverModelSync::BinComponent>(sourceEntity);
+    sourceSimulator.ExitSubModel();
+    targetSimulator.EnterSubModel();
+    target = Ers::GetSubModel().GetComponent<MoverModelSync::BinComponent>(targetEntity);
+    targetSimulator.ExitSubModel();
+    Ers::Logger::Info(std::format("Source bin has {} objects, Target bin has {} objects", source->Stored, target->Stored));
+
+    Ers::Uninitialize();
+
+    return 0;
 }

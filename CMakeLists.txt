@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.20)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-file(DOWNLOAD "https://gist.githubusercontent.com/markoostveen/37c2113fc0fddb86ed62e7b8495499f1/raw/449eef1e70fe3941cd904f956a58639c9e4f74fc/gistfile1.txt"
+file(DOWNLOAD "https://gist.githubusercontent.com/markoostveen/69603b9b77e37229f310a5c8a3abe6f2/raw/df0291f02a336e4134e31055eb7beecadc0457ba/gistfile1.txt"
 "${CMAKE_BINARY_DIR}/setup.cmake"
 STATUS download_status)
 include(${CMAKE_BINARY_DIR}/setup.cmake)
