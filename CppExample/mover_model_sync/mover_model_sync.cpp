@@ -96,7 +96,7 @@ namespace MoverModelSync
     }
 } // namespace MoverModelSync
 
-int main()
+void main()
 {
     Ers::Initialize();
 
@@ -140,7 +140,7 @@ int main()
 
     sourceSimulator.ExitSubModel();
 
-    // Add source simulator as dependency to target simulator, required for sync event
+    // Add source simulator as dependency to taget simulator, required for sync event
     modelContainer.AddSimulatorDependency(sourceSimulator, targetSimulator);
 
     Ers::Logger::Info(std::format("Source bin has {} objects, Target bin has {} objects", source->Stored, target->Stored));
@@ -162,6 +162,4 @@ int main()
     Ers::Logger::Info(std::format("Source bin has {} objects, Target bin has {} objects", source->Stored, target->Stored));
 
     Ers::Uninitialize();
-
-    return 0;
 }

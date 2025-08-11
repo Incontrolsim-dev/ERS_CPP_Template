@@ -60,7 +60,7 @@ namespace MoverModel
     }
 } // namespace MoverModel
 
-int main()
+void main()
 {
     Ers::Initialize();
 
@@ -107,12 +107,13 @@ int main()
 
     Ers::Logger::Debug("Starting...");
     modelContainer.Update(endTimeForModel);
+    {
+        auto* source = submodel.GetComponent<MoverModel::BinComponent>(sourceEntity);
+        auto* target = submodel.GetComponent<MoverModel::BinComponent>(targetEntity);
+        Ers::Logger::Info(std::format("Source bin has {} objects, Target bin has {} objects", source->Stored, target->Stored));
+    }
 
-    auto sourceResult = submodel.GetComponent<MoverModel::BinComponent>(sourceEntity);
-    auto targetResult = submodel.GetComponent<MoverModel::BinComponent>(targetEntity);
-    Ers::Logger::Info(std::format("Source bin has {} objects, Target bin has {} objects", sourceResult->Stored, targetResult->Stored));
+    simulator.ExitSubModel();
 
     Ers::Uninitialize();
-
-    return 0;
 }

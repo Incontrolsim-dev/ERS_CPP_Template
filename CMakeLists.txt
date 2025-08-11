@@ -3,11 +3,11 @@ cmake_minimum_required (VERSION 3.20)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-file(DOWNLOAD "https://gist.githubusercontent.com/markoostveen/37c2113fc0fddb86ed62e7b8495499f1/raw/fe7c4612b75b33d1e85a0981ad551d2e457f70a1/gistfile1.txt"
-"${CMAKE_BINARY_DIR}/setup.cmake"
-STATUS download_status)
+file(DOWNLOAD "https://gitlab.incontrolsim.com/enterprise-resource-simulator/public/ers_sdk/-/raw/main/setup.cmake" 
+              "${CMAKE_CURRENT_BINARY_DIR}/setup.cmake"
+              STATUS download_status)
 include(${CMAKE_BINARY_DIR}/setup.cmake)
-ERS_Download_SDK()
+ERS_Download_SDK("main")
 
 #Configure name
 project(ERS_Template VERSION 0.1)
