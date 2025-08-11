@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.20)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-file(DOWNLOAD "https://raw.githubusercontent.com/Incontrolsim-dev/ERS_CPP_SDK/main/RemoteSetup.cmake" "${CMAKE_CURRENT_BINARY_DIR}/RemoteSetup.cmake" STATUS download_status)
+file(DOWNLOAD "https://raw.github.com/Incontrolsim-dev/ERS_CPP_SDK/main/RemoteSetup.cmake" "${CMAKE_CURRENT_BINARY_DIR}/RemoteSetup.cmake" STATUS download_status)
 include(${CMAKE_CURRENT_BINARY_DIR}/RemoteSetup.cmake)
 ERS_Download_SDK("0.5.2")
 
