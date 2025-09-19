@@ -104,8 +104,8 @@ void main()
     auto endTimeForModel = SimulationTime(10000);
     endTimeForModel *= 1'000'000; // Apply model precision
 
-    Ers::Model::ModelManager& manager = Ers::Model::GetModelManager();
-    Ers::Model::ModelContainer modelContainer = Ers::Model::ModelContainer::CreateModelContainer();
+    Ers::ModelManager& manager = Ers::GetModelManager();
+    Ers::ModelContainer modelContainer = Ers::ModelContainer::CreateModelContainer();
 
     // Create simulators and get the submodels
     auto sourceSimulator = modelContainer.AddSimulator("Source Simulator", Ers::SimulatorType::DiscreteEvent);

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(DOWNLOAD "https://raw.github.com/Incontrolsim-dev/ERS_CPP_SDK/main/RemoteSetup.cmake" "${CMAKE_CURRENT_BINARY_DIR}/RemoteSetup.cmake" STATUS download_status)
 include(${CMAKE_CURRENT_BINARY_DIR}/RemoteSetup.cmake)
-ERS_Download_SDK("0.6.0-feature-ers-925-6279-3364fd8f")
+ERS_Download_SDK("0.6.0-develop-6307-0885d7f6")
 
 #Configure name
 project(ERS_Template VERSION 0.1)

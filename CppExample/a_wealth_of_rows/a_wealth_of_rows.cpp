@@ -7,6 +7,7 @@
 
 #include "Ers/Api.h"
 #include "Ers/Debugging/Debugger.h"
+#include "Ers/Debugging/Platform.h"
 #include "Ers/Debugging/Profiler.h"
 #include "Ers/Event/EventSignal.h"
 #include "Ers/Model/ModelContainer.h"
@@ -29,7 +30,7 @@ namespace WealthOfRows
 {
     class SubModelStatistics : public Ers::ScriptBehaviorComponent
     {
-    public:
+      public:
         SubModelStatistics() :
             NumberOfGeneratedEntities(0),
             NumberOfMovedEntities(0)
@@ -37,7 +38,6 @@ namespace WealthOfRows
         }
 
         void OnStart();
-
         void OnDestroy();
         void OnEntered(Ers::Entity parent, Ers::Entity newChild);
         void OnExited(Ers::Entity parent, Ers::Entity oldChild);
@@ -55,7 +55,7 @@ namespace WealthOfRows
     struct SinkPropertiesComponent : public Ers::ScriptBehaviorComponent
     {
 
-        uint64_t ReceivedTotes{ 0 };
+        uint64_t ReceivedTotes{0};
         std::vector<std::queue<EntityID>> IncomingQueues;
 
         bool operator==(const SinkPropertiesComponent& other) const { return this == &other; }
@@ -64,15 +64,15 @@ namespace WealthOfRows
     struct ConveyorPropertiesComponent : public Ers::DataComponent
     {
 
-        uint64_t Capacity{ 1 };
-        uint64_t MinimumTime{ 2 };
-        uint64_t ChanceOfDelay{ 0 };
-        uint64_t DelayTimeMin{ 1 };
-        uint64_t DelayTimeMax{ 10 };
-        bool AllowedToMoveOut{ false };
+        uint64_t Capacity{1};
+        uint64_t MinimumTime{2};
+        uint64_t ChanceOfDelay{0};
+        uint64_t DelayTimeMin{1};
+        uint64_t DelayTimeMax{10};
+        bool AllowedToMoveOut{false};
 
-        uint64_t ConveyorIndex{ 0 };
-        EntityID StatisticsEntity{ Ers::Entity::InvalidEntity };
+        uint64_t ConveyorIndex{0};
+        EntityID StatisticsEntity{Ers::Entity::InvalidEntity};
 
         // Contains all entities currently present in this conveyor
         std::queue<EntityID> ToteQueue;
@@ -83,7 +83,7 @@ namespace WealthOfRows
     class ConveyorScriptBehavior : public Ers::ScriptBehaviorComponent
     {
 
-    public:
+      public:
         ConveyorScriptBehavior();
 
         void OnAwake() override;
@@ -95,7 +95,7 @@ namespace WealthOfRows
         void OnEntered(const EntityID& newChild);
         void OnExited(const EntityID& oldChild);
 
-    private:
+      private:
         void DelayOrMove(const EntityID& primedTote);
         void MoveRequest(const EntityID& primedTote);
     };
@@ -129,12 +129,12 @@ namespace WealthOfRows
 
     void ConveyorScriptBehavior::CreateToteEvent()
     {
-        auto& submodel = Ers::GetSubModel();
+        auto& submodel  = Ers::GetSubModel();
         auto properties = submodel.GetComponent<ConveyorPropertiesComponent>(ConnectedEntity);
 
         const EntityID tote = submodel.CreateEntity("");
 
-        auto& sm = Ers::GetSubModel();
+        auto& sm        = Ers::GetSubModel();
         auto statistics = submodel.GetComponent<SubModelStatistics>(properties->StatisticsEntity);
         statistics->NumberOfGeneratedEntities++;
 
@@ -149,7 +149,7 @@ namespace WealthOfRows
 
     void ConveyorScriptBehavior::OnEntered(const EntityID& newChild)
     {
-        auto& submodel = Ers::GetSubModel();
+        auto& submodel  = Ers::GetSubModel();
         auto properties = submodel.GetComponent<ConveyorPropertiesComponent>(ConnectedEntity);
 
         properties->ToteQueue.emplace(newChild);
@@ -220,14 +220,14 @@ namespace WealthOfRows
             return;
         }
 
-        auto simulator = submodel.GetSimulator();
+        auto simulator       = submodel.GetSimulator();
         uint32_t simulatorId = simulator.GetID();
 
         auto statistics = submodel.GetComponent<SubModelStatistics>(properties->StatisticsEntity);
 
         if (statistics->Conveyors.size() - 1 == properties->ConveyorIndex)
         {
-            auto simulator = submodel.GetSimulator();
+            auto simulator                  = submodel.GetSimulator();
             const int32_t targetSimulatorId = simulator.FindOutgoingDependency("Final simulator").GetID();
 
             // Prepare for sync
@@ -252,16 +252,16 @@ namespace WealthOfRows
                     const Ers::Entity finalSubModelTote =
                         targetSubModel.ReceiveEntity(Ers::SyncEvent::GetSyncEventSender(), Ers::SentEntity(PrimedTote));
 
-                    auto& context = targetSubModel.GetSubModelContext<SinkContext>();
+                    auto& context          = targetSubModel.GetSubModelContext<SinkContext>();
                     Ers::Entity sinkEntity = context.SinkEntity;
-                    auto* sinkProperties = sinkEntity.GetComponent<WealthOfRows::SinkPropertiesComponent>();
+                    auto* sinkProperties   = sinkEntity.GetComponent<WealthOfRows::SinkPropertiesComponent>();
 
                     // Add tote to collection
                     auto& queue = sinkProperties->IncomingQueues.at(
                         Ers::SyncEvent::GetSyncEventSender()); // This only works because we aren't adding and removing submodels and the
-                    // model is build in
-                    // a
-                    // specific  order. Otherwise a map is more suitable
+                                                               // model is build in
+                                                               // a
+                                                               // specific  order. Otherwise a map is more suitable
                     const bool previouslyPresent = !queue.empty();
                     queue.emplace(finalSubModelTote);
 
@@ -291,7 +291,7 @@ namespace WealthOfRows
 
             // Schedule sync event, please note that the SharedState is cached when multiple events that share this are scheduled.
             // The Shared State is intended to resolve entities, generate data or other heavy operations that don't have to be repeated.
-            auto& data = Ers::EventScheduler::ScheduleSyncEvent<SendToFinalSubModelEventData>(delay, targetSimulatorId);
+            auto& data      = Ers::EventScheduler::ScheduleSyncEvent<SendToFinalSubModelEventData>(delay, targetSimulatorId);
             data.PrimedTote = primedTote;
 
             if (properties->ConveyorIndex == 0)
@@ -303,7 +303,7 @@ namespace WealthOfRows
 
             // Schedule event on the previous conveyor to keep shrink queue
             const EntityID& previousConveyor = statistics->Conveyors.at(properties->ConveyorIndex - 1);
-            auto previousConveyorProperties = submodel.GetComponent<ConveyorPropertiesComponent>(previousConveyor);
+            auto previousConveyorProperties  = submodel.GetComponent<ConveyorPropertiesComponent>(previousConveyor);
             if (!previousConveyorProperties->AllowedToMoveOut)
             {
                 return;
@@ -322,10 +322,10 @@ namespace WealthOfRows
         }
 
         const EntityID& nextConveyor = statistics->Conveyors.at(properties->ConveyorIndex + 1);
-        auto nextConveyorProperties = submodel.GetComponent<ConveyorPropertiesComponent>(nextConveyor);
-        int childCount = submodel.HasComponent<Ers::RelationComponent>(nextConveyor)
-            ? submodel.GetComponent<Ers::RelationComponent>(nextConveyor)->ChildCount()
-            : 0;
+        auto nextConveyorProperties  = submodel.GetComponent<ConveyorPropertiesComponent>(nextConveyor);
+        int childCount               = submodel.HasComponent<Ers::RelationComponent>(nextConveyor)
+                                           ? submodel.GetComponent<Ers::RelationComponent>(nextConveyor)->ChildCount()
+                                           : 0;
         if (childCount >= nextConveyorProperties->Capacity)
         {
             return;
@@ -343,7 +343,7 @@ namespace WealthOfRows
 
         // Schedule event on the previous conveyor to keep shrink queue
         const EntityID& previousConveyor = statistics->Conveyors.at(properties->ConveyorIndex - 1);
-        auto previousConveyorProperties = submodel.GetComponent<ConveyorPropertiesComponent>(previousConveyor);
+        auto previousConveyorProperties  = submodel.GetComponent<ConveyorPropertiesComponent>(previousConveyor);
         if (!previousConveyorProperties->AllowedToMoveOut)
         {
             return;
@@ -365,16 +365,16 @@ namespace WealthOfRows
         auto& submodel = Ers::GetSubModel();
 
         OnEnteredConnection = submodel.Events().Relation().OnEntered().Connect<SubModelStatistics, &SubModelStatistics::OnEntered>(this);
-        OnExitedConnection = submodel.Events().Relation().OnExited().Connect<SubModelStatistics, &SubModelStatistics::OnExited>(this);
+        OnExitedConnection  = submodel.Events().Relation().OnExited().Connect<SubModelStatistics, &SubModelStatistics::OnExited>(this);
 
         const EntityID statisticsEntity = submodel.FindEntity(SubModelStatistics::StatisticsEntityName);
-        const EntityID firstConveyor = submodel.GetComponent<SubModelStatistics>(statisticsEntity)->Conveyors.at(0);
+        const EntityID firstConveyor    = submodel.GetComponent<SubModelStatistics>(statisticsEntity)->Conveyors.at(0);
 
-        auto properties = submodel.GetComponent<ConveyorPropertiesComponent>(firstConveyor);
+        auto properties              = submodel.GetComponent<ConveyorPropertiesComponent>(firstConveyor);
         properties->AllowedToMoveOut = true;
-        properties->ChanceOfDelay = 0;
-        properties->MinimumTime = 0;
-        properties->Capacity = 0;
+        properties->ChanceOfDelay    = 0;
+        properties->MinimumTime      = 0;
+        properties->Capacity         = 0;
 
         submodel.GetComponent<ConveyorScriptBehavior>(firstConveyor)->CreateToteEvent();
     }
@@ -399,7 +399,7 @@ namespace WealthOfRows
             submodel.GetComponent<ConveyorScriptBehavior>(parent)->OnExited(oldChild);
     }
 
-    void CreateSubModel(Ers::Model::ModelContainer& modelContainer, int conveyorCount, uint64_t chanceOfDelay)
+    void CreateSubModel(Ers::ModelContainer& modelContainer, int conveyorCount, uint64_t chanceOfDelay)
     {
         auto newSimulator =
             modelContainer.AddSimulator(std::to_string(modelContainer.GetSimulators().size()), Ers::SimulatorType::DiscreteEvent);
@@ -412,17 +412,17 @@ namespace WealthOfRows
         submodel.AddComponentType<ConveyorScriptBehavior>();
         submodel.AddComponentType<Ers::RelationComponent>();
 
-        auto& sm = Ers::GetSubModel();
+        auto& sm                        = Ers::GetSubModel();
         const EntityID statisticsEntity = submodel.CreateEntity(SubModelStatistics::StatisticsEntityName);
-        auto statisticProperties = submodel.AddComponent<SubModelStatistics>(statisticsEntity);
+        auto statisticProperties        = submodel.AddComponent<SubModelStatistics>(statisticsEntity);
 
         for (size_t i = 0; i < conveyorCount + 1; i++)
         {
             const EntityID conveyorEntity = submodel.CreateEntity(std::format("Conveyor {}", i));
 
-            auto properties = submodel.AddComponent<ConveyorPropertiesComponent>(conveyorEntity);
-            properties->ConveyorIndex = statisticProperties->Conveyors.size();
-            properties->ChanceOfDelay = chanceOfDelay;
+            auto properties              = submodel.AddComponent<ConveyorPropertiesComponent>(conveyorEntity);
+            properties->ConveyorIndex    = statisticProperties->Conveyors.size();
+            properties->ChanceOfDelay    = chanceOfDelay;
             properties->StatisticsEntity = statisticsEntity;
             submodel.AddComponent<ConveyorScriptBehavior>(conveyorEntity);
             statisticProperties->Conveyors.emplace_back(conveyorEntity);
@@ -431,7 +431,7 @@ namespace WealthOfRows
         newSimulator.ExitSubModel();
     }
 
-    void CreateFinalSubModel(Ers::Model::ModelContainer& modelContainer)
+    void CreateFinalSubModel(Ers::ModelContainer& modelContainer)
     {
         auto simulator = modelContainer.AddSimulator("Final simulator", Ers::SimulatorType::DiscreteEvent);
 
@@ -443,7 +443,7 @@ namespace WealthOfRows
         EntityID sinkEntity = submodel.CreateEntity("Sink");
         auto sinkProperties = submodel.AddComponent<SinkPropertiesComponent>(sinkEntity);
 
-        auto& sinkContext = submodel.AddSubModelContext<SinkContext>();
+        auto& sinkContext      = submodel.AddSubModelContext<SinkContext>();
         sinkContext.SinkEntity = sinkEntity;
 
         sinkProperties->ReceivedTotes = 0;
@@ -453,7 +453,7 @@ namespace WealthOfRows
         for (size_t i = 0; i < simulatorCount; i++)
         {
             const std::string simulatorName = std::to_string(i);
-            auto dependencySimulator = modelContainer.FindSimulator(simulatorName);
+            auto dependencySimulator        = modelContainer.FindSimulator(simulatorName);
             if (dependencySimulator.Valid())
             {
                 modelContainer.AddSimulatorDependency(dependencySimulator, simulator);
@@ -471,8 +471,8 @@ namespace WealthOfRows
 
 void MeasureUser(int submodelCount, int conveyorCount, SimulationTime endTimeForModel, uint64_t chanceOfDelay)
 {
-    Ers::Model::ModelManager& manager = Ers::Model::GetModelManager();
-    Ers::Model::ModelContainer modelContainer = Ers::Model::ModelContainer::CreateModelContainer();
+    Ers::ModelManager& manager         = Ers::GetModelManager();
+    Ers::ModelContainer modelContainer = Ers::ModelContainer::CreateModelContainer();
     modelContainer.SetPrecision(1'000'000);
 
     modelContainer.SetSeed(1);
@@ -487,11 +487,13 @@ void MeasureUser(int submodelCount, int conveyorCount, SimulationTime endTimeFor
     WealthOfRows::CreateFinalSubModel(modelContainer);
 
 #ifdef WOR_DEBUGGER
-    auto debugger = Ers::Debugging::Debugger(modelContainer);
-    debugger.SetStepSize(1'000'000);
-    while (!debugger.WantsClose())
+    auto platform = Ers::Platform();
+    auto debugger = Ers::Debugger(modelContainer);
+    while (!platform.WantsClose())
     {
+        platform.BeginFrame();
         debugger.Update();
+        platform.EndFrame();
     }
     return;
 #endif
@@ -511,7 +513,7 @@ void MeasureUser(int submodelCount, int conveyorCount, SimulationTime endTimeFor
     auto& finalSubmodel = Ers::GetSubModel();
 
     const EntityID sinkEntity = finalSubmodel.FindEntity("Sink");
-    auto sinkProperties = finalSubmodel.GetComponent<WealthOfRows::SinkPropertiesComponent>(sinkEntity);
+    auto sinkProperties       = finalSubmodel.GetComponent<WealthOfRows::SinkPropertiesComponent>(sinkEntity);
 
     Ers::Logger::Info(
         std::format("{} received totes", sinkProperties->ReceivedTotes) + " " +
@@ -526,8 +528,8 @@ void MeasureUser(int submodelCount, int conveyorCount, SimulationTime endTimeFor
         auto simulator = modelContainer.GetSimulators()[i];
         simulator.EnterSubModel();
         auto& conveyorSubmodel = Ers::GetSubModel();
-        auto statisticsEntity = conveyorSubmodel.FindEntity(WealthOfRows::SubModelStatistics::StatisticsEntityName);
-        auto statistics = conveyorSubmodel.GetComponent<WealthOfRows::SubModelStatistics>(statisticsEntity);
+        auto statisticsEntity  = conveyorSubmodel.FindEntity(WealthOfRows::SubModelStatistics::StatisticsEntityName);
+        auto statistics        = conveyorSubmodel.GetComponent<WealthOfRows::SubModelStatistics>(statisticsEntity);
         Ers::Logger::Info(
             std::format(
                 "[{}] Totes generated: {}, Moved: {}", simulator.GetName(), statistics->NumberOfGeneratedEntities,
