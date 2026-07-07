@@ -1,9 +1,8 @@
-include(${ers_engine_SOURCE_DIR}/ERS/LinkEngine.cmake)
+project(mover_model_sync)
+add_executable(${PROJECT_NAME} mover_model_sync.cpp ${ERS_SDK_SOURCES})
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "Examples/C++")
 
-add_executable(mover_model_sync mover_model_sync.cpp)
-set_property(TARGET mover_model_sync PROPERTY CXX_STANDARD 20)
-target_include_directories(mover_model_sync PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-set_property(TARGET mover_model_sync PROPERTY FOLDER "Examples/C++")
-
-ERS_Link(mover_model_sync)
-ERS_Add_Test(mover_model_sync)
+target_link_libraries(${PROJECT_NAME} PRIVATE ers)
+ERS_copy_dll_so(${PROJECT_NAME})
